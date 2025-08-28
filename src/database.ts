@@ -2,6 +2,7 @@ export interface Matter {
   id: number;
   client_name: string;
   matter_number: string;
+  matter_name: string;
   description: string;
   status: 'active' | 'closed' | 'on_hold';
   created_at: string;
@@ -35,7 +36,7 @@ export interface MatterRate {
   created_at: string;
 }
 
-class Database {
+export class Database {
   private getNextId(storeName: string): number {
     const items = this.getFromStorage(storeName);
     return items.length === 0 ? 1 : Math.max(...items.map((item: any) => item.id)) + 1;
@@ -65,13 +66,12 @@ class Database {
     // Generate next matter number for this client
     const clientMatters = matters.filter((m: Matter) => m.client_name === matter.client_name);
     const nextMatterNumber = clientMatters.length.toString().padStart(4, '0');
-    const fullMatterNumber = `${matter.client_name} - ${nextMatterNumber}`;
 
     const id = this.getNextId('matters');
     const newMatter: Matter = {
       ...matter,
       id,
-      matter_number: fullMatterNumber,
+      matter_number: nextMatterNumber,
       created_at: new Date().toISOString()
     };
     
@@ -150,7 +150,7 @@ class Database {
     return id;
   }
 
-  async getTimeEntries(matterId?: number): Promise<(TimeEntry & { timekeeper_name: string; client_name: string; matter_number: string })[]> {
+  async getTimeEntries(matterId?: number): Promise<(TimeEntry & { timekeeper_name: string; client_name: string; matter_number: string; matter_name: string })[]> {
     const entries = this.getFromStorage('time_entries');
     const timekeepers = this.getFromStorage('timekeepers');
     const matters = this.getFromStorage('matters');
@@ -168,7 +168,8 @@ class Database {
         ...entry,
         timekeeper_name: timekeeper?.name || 'Unknown',
         client_name: matter?.client_name || 'Unknown',
-        matter_number: matter?.matter_number || 'Unknown'
+        matter_number: matter?.matter_number || 'Unknown',
+        matter_name: matter?.matter_name || 'Unknown'
       };
     });
 
@@ -273,6 +274,39 @@ class Database {
     return matterRates.find((mr: MatterRate) => 
       mr.matter_id === matterId && mr.timekeeper_id === timekeeperId
     ) || null;
+  }
+
+  // Time entry edit/delete operations
+  async updateTimeEntry(id: number, updates: Partial<Omit<TimeEntry, 'id' | 'created_at'>>): Promise<void> {
+    const entries = this.getFromStorage('time_entries');
+    const entryIndex = entries.findIndex((entry: TimeEntry) => entry.id === id);
+    
+    if (entryIndex === -1) {
+      throw new Error('Time entry not found');
+    }
+
+    entries[entryIndex] = {
+      ...entries[entryIndex],
+      ...updates
+    };
+
+    this.saveToStorage('time_entries', entries);
+  }
+
+  async deleteTimeEntry(id: number): Promise<void> {
+    const entries = this.getFromStorage('time_entries');
+    const filteredEntries = entries.filter((entry: TimeEntry) => entry.id !== id);
+    
+    if (filteredEntries.length === entries.length) {
+      throw new Error('Time entry not found');
+    }
+
+    this.saveToStorage('time_entries', filteredEntries);
+  }
+
+  async getTimeEntry(id: number): Promise<TimeEntry | null> {
+    const entries = this.getFromStorage('time_entries');
+    return entries.find((entry: TimeEntry) => entry.id === id) || null;
   }
 }
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { database, Matter, Timekeeper, TimeEntry as TimeEntryType } from '../database';
+import EditTimeEntryModal from './EditTimeEntryModal';
 
 const TimeEntry: React.FC = () => {
   const [matters, setMatters] = useState<Matter[]>([]);
   const [timekeepers, setTimekeepers] = useState<Timekeeper[]>([]);
-  const [timeEntries, setTimeEntries] = useState<(TimeEntryType & { timekeeper_name: string; client_name: string; matter_number: string })[]>([]);
+  const [timeEntries, setTimeEntries] = useState<(TimeEntryType & { timekeeper_name: string; client_name: string; matter_number: string; matter_name: string })[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     matter_id: '',
@@ -17,6 +18,7 @@ const TimeEntry: React.FC = () => {
   });
   const [calculatedRate, setCalculatedRate] = useState<number>(0);
   const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
+  const [editingTimeEntry, setEditingTimeEntry] = useState<(TimeEntryType & { timekeeper_name: string; client_name: string; matter_number: string; matter_name: string }) | null>(null);
 
   const loadData = async () => {
     try {
@@ -208,7 +210,7 @@ const TimeEntry: React.FC = () => {
               <option value="">Select Matter</option>
               {matters.map((matter) => (
                 <option key={matter.id} value={matter.id}>
-                  {matter.client_name} - {matter.matter_number}
+                  {matter.client_name} - {matter.matter_number} - {matter.matter_name}
                 </option>
               ))}
             </select>
@@ -376,7 +378,7 @@ const TimeEntry: React.FC = () => {
                   backgroundColor: 'white'
                 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '15px', alignItems: 'start' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                       <span style={{ fontWeight: 'bold' }}>{entry.timekeeper_name}</span>
@@ -394,7 +396,7 @@ const TimeEntry: React.FC = () => {
                       </span>
                     </div>
                     <div style={{ marginBottom: '8px', fontSize: '0.9em', color: '#666' }}>
-                      {entry.client_name} - {entry.matter_number}
+                      {entry.client_name} - {entry.matter_number} - {entry.matter_name}
                     </div>
                     <div style={{ fontSize: '0.9em' }}>
                       {entry.description}
@@ -410,12 +412,38 @@ const TimeEntry: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  <div>
+                    <button
+                      onClick={() => setEditingTimeEntry(entry)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.8em'
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <EditTimeEntryModal
+        timeEntry={editingTimeEntry}
+        isOpen={editingTimeEntry !== null}
+        onClose={() => setEditingTimeEntry(null)}
+        onSave={() => {
+          setEditingTimeEntry(null);
+          loadData();
+        }}
+      />
     </div>
   );
 };
