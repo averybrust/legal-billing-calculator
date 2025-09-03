@@ -65,12 +65,27 @@ const TimekeeperSetup: React.FC = () => {
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            padding: '10px 20px',
-            backgroundColor: '#007bff',
+            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '15px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.2s ease',
+            letterSpacing: '-0.2px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(14, 165, 233, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)';
           }}
         >
           {showForm ? 'Cancel' : 'New Timekeeper'}
@@ -148,12 +163,27 @@ const TimekeeperSetup: React.FC = () => {
           <button
             type="submit"
             style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s ease',
+              letterSpacing: '-0.2px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(5, 150, 105, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
             }}
           >
             Add Timekeeper
@@ -171,17 +201,35 @@ const TimekeeperSetup: React.FC = () => {
               <div
                 key={timekeeper.id}
                 style={{
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  padding: '15px',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #fafbff 100%)',
+                  border: '1px solid #e3f2fd',
+                  borderRadius: '12px',
+                  padding: '20px',
                   backgroundColor: 'white',
+                  boxShadow: '0 4px 12px rgba(0, 123, 191, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 123, 191, 0.12), 0 4px 8px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 123, 191, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06)';
+                }}
               >
                 <div>
-                  <h4 style={{ margin: '0 0 5px 0' }}>{timekeeper.name}</h4>
+                  <h4 style={{ 
+                    margin: '0 0 8px 0',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: '#1a365d',
+                    letterSpacing: '-0.3px'
+                  }}>{timekeeper.name}</h4>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <span
                       style={{

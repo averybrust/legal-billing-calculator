@@ -110,12 +110,27 @@ TOTAL AMOUNT DUE: $${summary.total_billable_amount.toFixed(2)}
           <button
             onClick={generateInvoice}
             style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s ease',
+              letterSpacing: '-0.2px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(5, 150, 105, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
             }}
           >
             Generate Invoice
