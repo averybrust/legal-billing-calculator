@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { database, Matter } from '../database';
+import { database, Matter, Client } from '../database';
 import EditMatterModal from './EditMatterModal';
 import MatterMenu from './MatterMenu';
-import ClientAutocomplete from './ClientAutocomplete';
+import { Card, CardContent, CardHeader } from './ui/Card';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Badge from './ui/Badge';
+import { MagnifyingGlassIcon, PlusIcon } from '@radix-ui/react-icons';
 
 const MatterManagement: React.FC = () => {
   const [matters, setMatters] = useState<Matter[]>([]);
-  const [clients, setClients] = useState<string[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingMatter, setEditingMatter] = useState<Matter | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,11 +22,12 @@ const MatterManagement: React.FC = () => {
     closed: true
   });
   const [formData, setFormData] = useState({
-    client_name: '',
+    client_id: 0,
     matter_name: '',
     description: '',
     status: 'active' as 'active' | 'closed' | 'on_hold'
   });
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -32,7 +37,7 @@ const MatterManagement: React.FC = () => {
     try {
       const [allMatters, allClients] = await Promise.all([
         database.getMatters(),
-        database.getUniqueClients()
+        database.getClients()
       ]);
       setMatters(allMatters);
       setClients(allClients);
@@ -43,10 +48,20 @@ const MatterManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous validation error
+    setValidationError('');
+    
+    // Validate client selection
+    if (!formData.client_id || formData.client_id === 0) {
+      setValidationError('Please select a client');
+      return;
+    }
+    
     try {
       await database.createMatter(formData);
       setFormData({
-        client_name: '',
+        client_id: 0,
         matter_name: '',
         description: '',
         status: 'active'
@@ -181,7 +196,7 @@ const MatterManagement: React.FC = () => {
             e.currentTarget.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)';
           }}
         >
-          {showForm ? 'Cancel' : 'New Matter'}
+          {showForm ? 'Cancel' : '+ New Matter'}
         </button>
       </div>
 
@@ -194,18 +209,36 @@ const MatterManagement: React.FC = () => {
         }}>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Client Name:
+              Client:
             </label>
-            <ClientAutocomplete
-              value={formData.client_name}
-              onChange={(value) => setFormData({ ...formData, client_name: value })}
-              clients={clients}
-              placeholder="Enter client name (existing clients will show in dropdown)"
+            <select
+              value={formData.client_id}
+              onChange={(e) => setFormData({ ...formData, client_id: Number(e.target.value) })}
               required
-            />
-            {formData.client_name && formData.matter_name && (
+              aria-label="client"
+              style={{ 
+                width: '100%', 
+                padding: '8px', 
+                border: '1px solid #ddd', 
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}
+            >
+              <option value={0}>Select a client...</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+            {validationError && (
+              <div style={{ color: '#ef4444', fontSize: '0.9em', marginTop: '5px' }}>
+                {validationError}
+              </div>
+            )}
+            {formData.client_id > 0 && formData.matter_name && (
               <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
-                Full matter identifier: {String(matters.filter(m => m.client_name === formData.client_name).length).padStart(4, '0')} - {formData.matter_name}
+                Full matter identifier: {String(matters.filter(m => m.client_id === formData.client_id).length).padStart(4, '0')} - {formData.matter_name}
               </div>
             )}
           </div>

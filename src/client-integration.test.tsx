@@ -243,6 +243,7 @@ describe('Client Integration Tests', () => {
       const mockMatter = {
         id: 1,
         client_id: 1,
+        client_name: 'Test Client',
         matter_number: '0000',
         matter_name: 'Test Matter',
         description: 'Test matter description',
@@ -303,6 +304,7 @@ describe('Client Integration Tests', () => {
       const mockMatter = {
         id: 1,
         client_id: 1,
+        client_name: 'Workflow Test Client',
         matter_number: '0000',
         matter_name: 'Workflow Test Matter',
         description: 'Matter for testing workflow',
@@ -374,6 +376,7 @@ describe('Client Integration Tests', () => {
         {
           id: 1,
           client_id: 1,
+          client_name: 'Client with Matters',
           matter_number: '0000',
           matter_name: 'Matter 1',
           description: 'First matter',
@@ -383,6 +386,7 @@ describe('Client Integration Tests', () => {
         {
           id: 2,
           client_id: 1,
+          client_name: 'Client with Matters',
           matter_number: '0001',
           matter_name: 'Matter 2', 
           description: 'Second matter',

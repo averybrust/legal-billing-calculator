@@ -13,23 +13,33 @@ interface Client {
   created_at: string;
 }
 
-// Mock localStorage for testing
-const mockLocalStorage = () => {
+// Mock localStorage for testing (same pattern as database.test.ts)
+const localStorageMock = (() => {
   let store: { [key: string]: string } = {};
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: jest.fn((key: string) => { delete store[key]; }),
-    clear: jest.fn(() => { store = {}; })
-  };
-};
 
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage() });
+  return {
+    getItem: (key: string) => {
+      return store[key] || null;
+    },
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    }
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+});
 
 describe('Client Database Operations', () => {
   beforeEach(() => {
     localStorage.clear();
-    jest.clearAllMocks();
   });
 
   describe('Client Data Model', () => {
@@ -260,6 +270,9 @@ describe('Client Database Operations', () => {
         contact_email: 'tim@apple.com'
       });
 
+      // Small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 1));
+
       await database.createClient({
         name: 'Beta Industries',
         description: 'Manufacturing company',
@@ -268,6 +281,9 @@ describe('Client Database Operations', () => {
         contact_phone: '555-BETA',
         contact_email: 'manager@beta.com'
       });
+
+      // Small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 1));
 
       await database.createClient({
         name: 'Acme Services',

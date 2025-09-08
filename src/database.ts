@@ -1,5 +1,18 @@
+export interface Client {
+  id: number;
+  client_number: string;
+  name: string;
+  description?: string;
+  address?: string;
+  contact_name?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  created_at: string;
+}
+
 export interface Matter {
   id: number;
+  client_id: number;
   client_name: string;
   matter_number: string;
   matter_name: string;
@@ -60,24 +73,39 @@ export class Database {
   }
 
   // Matter operations
-  async createMatter(matter: Omit<Matter, 'id' | 'created_at' | 'matter_number'>): Promise<number> {
+  async createMatter(matterData: {
+    client_id: number;
+    matter_name: string;
+    description: string;
+    status?: 'active' | 'closed' | 'on_hold';
+  }): Promise<Matter> {
+    // Validate client exists
+    const client = await this.getClient(matterData.client_id);
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
     const matters = this.getFromStorage('matters');
     
     // Generate next matter number for this client
-    const clientMatters = matters.filter((m: Matter) => m.client_name === matter.client_name);
+    const clientMatters = matters.filter((m: Matter) => m.client_id === matterData.client_id);
     const nextMatterNumber = clientMatters.length.toString().padStart(4, '0');
 
     const id = this.getNextId('matters');
     const newMatter: Matter = {
-      ...matter,
       id,
+      client_id: matterData.client_id,
+      client_name: client.name, // Keep for backward compatibility
       matter_number: nextMatterNumber,
+      matter_name: matterData.matter_name,
+      description: matterData.description,
+      status: matterData.status || 'active',
       created_at: new Date().toISOString()
     };
     
     matters.push(newMatter);
     this.saveToStorage('matters', matters);
-    return id;
+    return newMatter;
   }
 
   async getMatters(): Promise<Matter[]> {
@@ -307,6 +335,112 @@ export class Database {
   async getTimeEntry(id: number): Promise<TimeEntry | null> {
     const entries = this.getFromStorage('time_entries');
     return entries.find((entry: TimeEntry) => entry.id === id) || null;
+  }
+
+  // Client operations
+  async createClient(clientData: {
+    name: string;
+    description?: string;
+    address?: string;
+    contact_name?: string;
+    contact_phone?: string;
+    contact_email?: string;
+  }): Promise<Client> {
+    const clients = this.getFromStorage('clients');
+    
+    // Generate next client number based on current count
+    const nextClientNumber = clients.length.toString().padStart(6, '0');
+
+    const id = this.getNextId('clients');
+    const newClient: Client = {
+      id,
+      client_number: nextClientNumber,
+      name: clientData.name,
+      description: clientData.description || '',
+      address: clientData.address || '',
+      contact_name: clientData.contact_name || '',
+      contact_phone: clientData.contact_phone || '',
+      contact_email: clientData.contact_email || '',
+      created_at: new Date().toISOString()
+    };
+    
+    clients.push(newClient);
+    this.saveToStorage('clients', clients);
+    return newClient;
+  }
+
+  async getClients(): Promise<Client[]> {
+    const clients = this.getFromStorage('clients');
+    return clients.sort((a: Client, b: Client) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }
+
+  async getClient(id: number): Promise<Client | null> {
+    const clients = this.getFromStorage('clients');
+    return clients.find((c: Client) => c.id === id) || null;
+  }
+
+  async updateClient(id: number, updates: Partial<Omit<Client, 'id' | 'client_number' | 'created_at'>>): Promise<void> {
+    const clients = this.getFromStorage('clients');
+    const clientIndex = clients.findIndex((c: Client) => c.id === id);
+    
+    if (clientIndex === -1) {
+      throw new Error('Client not found');
+    }
+
+    clients[clientIndex] = { ...clients[clientIndex], ...updates };
+    this.saveToStorage('clients', clients);
+  }
+
+  async deleteClient(id: number): Promise<void> {
+    const clients = this.getFromStorage('clients');
+    const clientIndex = clients.findIndex((c: Client) => c.id === id);
+    
+    if (clientIndex === -1) {
+      throw new Error('Client not found');
+    }
+
+    // Delete associated matters first (cascade delete)
+    const matters = this.getFromStorage('matters');
+    const filteredMatters = matters.filter((m: Matter) => m.client_id !== id);
+    this.saveToStorage('matters', filteredMatters);
+
+    // Delete the client
+    clients.splice(clientIndex, 1);
+    this.saveToStorage('clients', clients);
+  }
+
+  async searchClients(query: string): Promise<Client[]> {
+    const clients = this.getFromStorage('clients');
+    if (!query.trim()) {
+      return clients;
+    }
+    
+    const lowerQuery = query.toLowerCase();
+    return clients.filter((c: Client) => 
+      c.name.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  async getClientsSorted(sortBy: 'name' | 'created'): Promise<Client[]> {
+    const clients = this.getFromStorage('clients');
+    
+    if (sortBy === 'name') {
+      return clients.sort((a: Client, b: Client) => 
+        a.name.localeCompare(b.name)
+      );
+    } else {
+      // Sort by created date, newest first
+      return clients.sort((a: Client, b: Client) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+  }
+
+  async getMattersForClient(clientId: number): Promise<Matter[]> {
+    const matters = this.getFromStorage('matters');
+    return matters.filter((m: Matter) => m.client_id === clientId);
   }
 }
 

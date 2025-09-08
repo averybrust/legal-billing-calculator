@@ -349,7 +349,7 @@ describe('ClientManagement Component', () => {
       mockDatabase.getClients.mockResolvedValue(mockClients);
       mockDatabase.getClientsSorted.mockResolvedValue(mockClients);
       mockDatabase.getMattersForClient.mockResolvedValue([
-        { id: 1, client_id: 1, matter_name: 'Test Matter', matter_number: '0000' }
+        { id: 1, client_id: 1, client_name: 'Client to Delete', matter_name: 'Test Matter', matter_number: '0000', description: 'Test matter', status: 'active' as const, created_at: '2025-09-08T16:00:00.000Z' }
       ]);
 
       render(<ClientManagement />);

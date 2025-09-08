@@ -34,44 +34,48 @@ describe('Database', () => {
 
   describe('Matter Management', () => {
     test('creates matter with auto-generated matter number', async () => {
-      const matterId = await db.createMatter({
-        client_name: 'Test Client',
+      const client = await db.createClient({ name: 'Test Client' });
+      const matter = await db.createMatter({
+        client_id: client.id,
         matter_name: 'Test Matter',
         description: 'Test matter description',
         status: 'active'
       });
 
-      expect(matterId).toBe(1);
+      expect(matter.id).toBe(1);
 
-      const matter = await db.getMatter(matterId);
-      expect(matter).toMatchObject({
+      const retrievedMatter = await db.getMatter(matter.id);
+      expect(retrievedMatter).toMatchObject({
         id: 1,
-        client_name: 'Test Client',
+        client_id: client.id,
         matter_number: '0000',
         matter_name: 'Test Matter',
         description: 'Test matter description',
         status: 'active'
       });
-      expect(matter.created_at).toBeDefined();
+      expect(retrievedMatter.created_at).toBeDefined();
     });
 
     test('generates sequential matter numbers per client', async () => {
+      const clientA = await db.createClient({ name: 'Client A' });
+      const clientB = await db.createClient({ name: 'Client B' });
+      
       await db.createMatter({
-        client_name: 'Client A',
+        client_id: clientA.id,
         matter_name: 'First Matter A',
         description: 'First matter',
         status: 'active'
       });
 
       await db.createMatter({
-        client_name: 'Client A',
+        client_id: clientA.id,
         matter_name: 'Second Matter A',
         description: 'Second matter',
         status: 'active'
       });
 
       await db.createMatter({
-        client_name: 'Client B',
+        client_id: clientB.id,
         matter_name: 'First Matter B',
         description: 'First matter for B',
         status: 'active'
@@ -91,19 +95,20 @@ describe('Database', () => {
     });
 
     test('updates matter successfully', async () => {
-      const matterId = await db.createMatter({
-        client_name: 'Test Client',
+      const testClient = await db.createClient({ name: 'Test Client' });
+      const matter = await db.createMatter({
+        client_id: testClient.id,
         matter_name: 'Original Matter',
         description: 'Original description',
         status: 'active'
       });
 
-      await db.updateMatter(matterId, {
+      await db.updateMatter(matter.id, {
         description: 'Updated description',
         status: 'closed'
       });
 
-      const updatedMatter = await db.getMatter(matterId);
+      const updatedMatter = await db.getMatter(matter.id);
       expect(updatedMatter.description).toBe('Updated description');
       expect(updatedMatter.status).toBe('closed');
       expect(updatedMatter.client_name).toBe('Test Client'); // Should remain unchanged
@@ -116,9 +121,12 @@ describe('Database', () => {
     });
 
     test('gets unique clients', async () => {
-      await db.createMatter({ client_name: 'Client A', matter_name: 'Matter A1', description: 'Matter 1', status: 'active' });
-      await db.createMatter({ client_name: 'Client B', matter_name: 'Matter B1', description: 'Matter 2', status: 'active' });
-      await db.createMatter({ client_name: 'Client A', matter_name: 'Matter A2', description: 'Matter 3', status: 'active' });
+      const clientA = await db.createClient({ name: 'Client A' });
+      const clientB = await db.createClient({ name: 'Client B' });
+      
+      await db.createMatter({ client_id: clientA.id, matter_name: 'Matter A1', description: 'Matter 1', status: 'active' });
+      await db.createMatter({ client_id: clientB.id, matter_name: 'Matter B1', description: 'Matter 2', status: 'active' });
+      await db.createMatter({ client_id: clientA.id, matter_name: 'Matter A2', description: 'Matter 3', status: 'active' });
 
       const clients = await db.getUniqueClients();
       expect(clients).toEqual(['Client A', 'Client B']);
@@ -158,10 +166,12 @@ describe('Database', () => {
   describe('Time Entry Management', () => {
     let matterId: number;
     let timekeeperId: number;
+    let testClient: any;
 
     beforeEach(async () => {
+      testClient = await db.createClient({ name: 'Test Client' });
       matterId = await db.createMatter({
-        client_name: 'Test Client',
+        client_id: testClient.id,
         matter_name: 'Test Matter',
         description: 'Test matter',
         status: 'active'
@@ -196,7 +206,7 @@ describe('Database', () => {
         description: 'Legal research',
         is_billable: true,
         timekeeper_name: 'Test Lawyer',
-        client_name: 'Test Client',
+        client_id: testClient.id,
         matter_number: '0000'
       });
     });
@@ -217,8 +227,9 @@ describe('Database', () => {
     });
 
     test('filters time entries by matter', async () => {
+      const client2 = await db.createClient({ name: 'Client 2' });
       const matter2Id = await db.createMatter({
-        client_name: 'Client 2',
+        client_id: client2.id,
         matter_name: 'Matter 2',
         description: 'Matter 2',
         status: 'active'
@@ -279,10 +290,12 @@ describe('Database', () => {
     let matterId: number;
     let partnerId: number;
     let associateId: number;
+    let testClient: any;
 
     beforeEach(async () => {
+      testClient = await db.createClient({ name: 'Test Client' });
       matterId = await db.createMatter({
-        client_name: 'Test Client',
+        client_id: testClient.id,
         matter_name: 'Test Matter',
         description: 'Test matter',
         status: 'active'
@@ -415,10 +428,12 @@ describe('Database', () => {
   describe('Matter Rate Management', () => {
     let matterId: number;
     let timekeeperId: number;
+    let testClient: any;
 
     beforeEach(async () => {
+      testClient = await db.createClient({ name: 'Test Client' });
       matterId = await db.createMatter({
-        client_name: 'Test Client',
+        client_id: testClient.id,
         matter_name: 'Test Matter',
         description: 'Test matter',
         status: 'active'

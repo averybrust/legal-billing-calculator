@@ -27,35 +27,44 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('MatterManagement - Search and Collapsible Sections', () => {
+  let testClientA: any;
+  let testClientB: any;
+  let testClientC: any;
+
   beforeEach(() => {
     localStorage.clear();
   });
 
   beforeEach(async () => {
+    // Create test clients first
+    testClientA = await database.createClient({ name: 'Acme Corp' });
+    testClientB = await database.createClient({ name: 'Beta LLC' });
+    testClientC = await database.createClient({ name: 'Gamma Inc' });
+
     // Create test data
     await database.createMatter({
-      client_name: 'Acme Corp',
+      client_id: testClientA.id,
       matter_name: 'Contract Review',
       description: 'Service agreement review',
       status: 'active'
     });
 
     await database.createMatter({
-      client_name: 'Beta LLC',
+      client_id: testClientB.id,
       matter_name: 'Litigation Support',
       description: 'Employment dispute',
       status: 'on_hold'
     });
 
     await database.createMatter({
-      client_name: 'Acme Corp',
+      client_id: testClientA.id,
       matter_name: 'IP Filing',
       description: 'Trademark application',
       status: 'closed'
     });
 
     await database.createMatter({
-      client_name: 'Gamma Inc',
+      client_id: testClientC.id,
       matter_name: 'Merger Due Diligence',
       description: 'Corporate acquisition',
       status: 'active'
