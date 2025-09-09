@@ -281,25 +281,6 @@ const MatterManagement: React.FC = () => {
             />
           </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Status:
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'closed' | 'on_hold' })}
-              style={{ 
-                width: '100%', 
-                padding: '8px', 
-                border: '1px solid #ddd', 
-                borderRadius: '4px' 
-              }}
-            >
-              <option value="active">Active</option>
-              <option value="on_hold">On Hold</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
 
           <button
             type="submit"

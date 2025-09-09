@@ -3,8 +3,8 @@
 ## Project Overview
 React + TypeScript web app for legal time tracking and billing. Professional UI with Clio-inspired design system.
 
-**Current Status**: Professional UI transformation complete - navigation, cards, and primary buttons done
-**Last Updated**: 2025-09-03
+**Current Status**: Client management and UX improvements complete
+**Last Updated**: 2025-09-09
 
 ## Architecture
 - **Frontend**: React 19.1.1 + TypeScript + CSS
@@ -25,14 +25,16 @@ src/
 ```
 
 ## Core Features
-1. **Matter Management**: Search, collapsible sections, auto-numbering "[0000] - Name"
-2. **Time Entry**: Full CRUD with rate overrides, billable/non-billable toggle
-3. **Billing**: Rate precedence (entry > matter > standard), timekeeper breakdown
-4. **Professional UI**: Clio-inspired cards, gradients, shadows, animations
+1. **Client Management**: Full CRUD, duplicate validation, modal editing
+2. **Matter Management**: Search, collapsible sections, auto-numbering "[0000] - Name"
+3. **Time Entry**: Full CRUD with rate overrides, sorting, conditional UI
+4. **Billing**: Rate precedence (entry > matter > standard), timekeeper breakdown
+5. **Professional UI**: Clio-inspired cards, gradients, shadows, animations
 
 ## Data Model
 ```typescript
-Matter: id, client_name, matter_number, matter_name, status
+Client: id, client_number, name, description?, contact_info?
+Matter: id, client_id, matter_number, matter_name, status
 Timekeeper: id, name, rate_tier, standard_rate  
 TimeEntry: id, matter_id, timekeeper_id, hours, is_billable, override_rate?
 MatterRate: id, matter_id, timekeeper_id, override_rate
@@ -44,9 +46,9 @@ MatterRate: id, matter_id, timekeeper_id, override_rate
 - **29 tests**: Database (19), Integration (3), UI features (7)
 - **Run**: `npm test`
 
-## Current Session Status
-✅ **Complete**: Professional navigation, card system, primary buttons
-🔄 **In Progress**: Button system (secondary/utility buttons pending)
+## Recent Updates
+✅ **Client Management**: Edit modals, duplicate name validation, form improvements
+✅ **UX Enhancements**: Override rate conditional UI, time entry sorting, matter form cleanup
 📂 **Assets**: `/screenshots/` for documentation, `/clio-button-system.js` for reusable styles
 
 ## Next Priorities

@@ -19,6 +19,7 @@ const TimeEntry: React.FC = () => {
   const [calculatedRate, setCalculatedRate] = useState<number>(0);
   const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
   const [editingTimeEntry, setEditingTimeEntry] = useState<(TimeEntryType & { timekeeper_name: string; client_name: string; matter_number: string; matter_name: string }) | null>(null);
+  const [sortBy, setSortBy] = useState<'date' | 'matter' | 'timekeeper'>('date');
 
   const loadData = async () => {
     try {
@@ -120,6 +121,30 @@ const TimeEntry: React.FC = () => {
     const currentHours = parseFloat(formData.hours) || 0;
     const newHours = roundToIncrement(currentHours + increment, increment);
     setFormData({ ...formData, hours: newHours.toString() });
+  };
+
+  const sortTimeEntries = (entries: (TimeEntryType & { timekeeper_name: string; client_name: string; matter_number: string; matter_name: string })[]) => {
+    const sorted = [...entries];
+    
+    switch (sortBy) {
+      case 'matter':
+        return sorted.sort((a, b) => {
+          const aFull = `${a.client_name} - ${a.matter_number} - ${a.matter_name}`;
+          const bFull = `${b.client_name} - ${b.matter_number} - ${b.matter_name}`;
+          return aFull.localeCompare(bFull);
+        });
+      case 'timekeeper':
+        return sorted.sort((a, b) => a.timekeeper_name.localeCompare(b.timekeeper_name));
+      case 'date':
+      default:
+        return sorted.sort((a, b) => {
+          const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
+          if (dateCompare === 0) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return dateCompare;
+        });
+    }
   };
 
   return (
@@ -317,14 +342,23 @@ const TimeEntry: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={formData.is_billable}
-                  onChange={(e) => setFormData({ ...formData, is_billable: e.target.checked })}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    is_billable: e.target.checked,
+                    override_rate: e.target.checked ? formData.override_rate : ''
+                  })}
                 />
                 <span style={{ fontWeight: 'bold' }}>Billable Time</span>
               </label>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '5px', 
+                fontWeight: 'bold',
+                color: formData.is_billable ? '#333' : '#999'
+              }}>
                 Override Rate ($/hr):
               </label>
               <input
@@ -334,11 +368,15 @@ const TimeEntry: React.FC = () => {
                 value={formData.override_rate}
                 onChange={(e) => setFormData({ ...formData, override_rate: e.target.value })}
                 placeholder="Leave blank for standard rate"
+                disabled={!formData.is_billable}
                 style={{ 
                   width: '100%', 
                   padding: '8px', 
                   border: '1px solid #ddd', 
-                  borderRadius: '4px' 
+                  borderRadius: '4px',
+                  backgroundColor: formData.is_billable ? '#fff' : '#f5f5f5',
+                  color: formData.is_billable ? '#333' : '#999',
+                  cursor: formData.is_billable ? 'text' : 'not-allowed'
                 }}
               />
             </div>
@@ -393,12 +431,39 @@ const TimeEntry: React.FC = () => {
       )}
 
       <div>
-        <h3>Recent Time Entries</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3>Recent Time Entries</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ 
+              fontSize: '14px', 
+              fontWeight: 600,
+              color: '#374151'
+            }}>
+              Sort by:
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'date' | 'matter' | 'timekeeper')}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: '#f9fafb',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="date">Date</option>
+              <option value="matter">Matter</option>
+              <option value="timekeeper">Team Member</option>
+            </select>
+          </div>
+        </div>
         {timeEntries.length === 0 ? (
           <p style={{ color: '#6c757d', fontStyle: 'italic' }}>No time entries recorded yet.</p>
         ) : (
           <div style={{ display: 'grid', gap: '10px' }}>
-            {timeEntries.slice(0, 10).map((entry) => (
+            {sortTimeEntries(timeEntries).slice(0, 10).map((entry) => (
               <div
                 key={entry.id}
                 style={{

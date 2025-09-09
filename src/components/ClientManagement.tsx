@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { database, Client } from '../database';
+import EditClientModal from './EditClientModal';
 
 interface ClientFormData {
   name: string;
@@ -27,6 +28,9 @@ const ClientManagement: React.FC = () => {
   const [contextMenuOpen, setContextMenuOpen] = useState<number | null>(null);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState<Client | null>(null);
   const [clientMattersCount, setClientMattersCount] = useState<number>(0);
+  const [nameExists, setNameExists] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
 
   useEffect(() => {
     loadClients();
@@ -61,6 +65,45 @@ const ClientManagement: React.FC = () => {
     }
   };
 
+  const checkClientNameExists = async (name: string) => {
+    if (!name.trim()) {
+      setNameExists(false);
+      return;
+    }
+    
+    try {
+      const exists = await database.clientNameExists(name);
+      setNameExists(exists);
+    } catch (error) {
+      console.error('Error checking client name:', error);
+      setNameExists(false);
+    }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setClientToEdit(client);
+    setEditModalOpen(true);
+    setContextMenuOpen(null);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setClientToEdit(null);
+  };
+
+  const handleEditModalSave = async () => {
+    await loadClients();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, fieldType: 'single' | 'multi') => {
+    if (e.key === 'Enter') {
+      if (fieldType === 'single') {
+        e.preventDefault(); // Prevent form submission
+      }
+      // For multi-line fields (fieldType === 'multi'), allow natural newline behavior
+    }
+  };
+
   const handleSortChange = (newSortBy: 'name' | 'created') => {
     setSortBy(newSortBy);
   };
@@ -84,6 +127,7 @@ const ClientManagement: React.FC = () => {
         contact_phone: '',
         contact_email: ''
       });
+      setNameExists(false);
       setIsFormOpen(false);
       
       // Reload clients
@@ -220,7 +264,12 @@ const ClientManagement: React.FC = () => {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setFormData({ ...formData, name: newName });
+                    checkClientNameExists(newName);
+                  }}
+                  onKeyDown={(e) => handleKeyDown(e, 'single')}
                   placeholder="Enter client name"
                   style={{
                     width: '100%',
@@ -247,6 +296,7 @@ const ClientManagement: React.FC = () => {
                   type="text"
                   value={formData.contact_name}
                   onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  onKeyDown={(e) => handleKeyDown(e, 'single')}
                   placeholder="Enter contact name"
                   style={{
                     width: '100%',
@@ -269,18 +319,20 @@ const ClientManagement: React.FC = () => {
                 }}>
                   Description:
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onKeyDown={(e) => handleKeyDown(e, 'multi')}
                   placeholder="Enter client description"
+                  rows={4}
                   style={{
                     width: '100%',
                     padding: '10px 12px',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '14px',
-                    backgroundColor: '#f9fafb'
+                    backgroundColor: '#f9fafb',
+                    resize: 'vertical'
                   }}
                 />
               </div>
@@ -299,6 +351,7 @@ const ClientManagement: React.FC = () => {
                   type="text"
                   value={formData.contact_phone}
                   onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                  onKeyDown={(e) => handleKeyDown(e, 'single')}
                   placeholder="Enter contact phone"
                   style={{
                     width: '100%',
@@ -321,18 +374,20 @@ const ClientManagement: React.FC = () => {
                 }}>
                   Address:
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onKeyDown={(e) => handleKeyDown(e, 'multi')}
                   placeholder="Enter client address"
+                  rows={4}
                   style={{
                     width: '100%',
                     padding: '10px 12px',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '14px',
-                    backgroundColor: '#f9fafb'
+                    backgroundColor: '#f9fafb',
+                    resize: 'vertical'
                   }}
                 />
               </div>
@@ -351,6 +406,7 @@ const ClientManagement: React.FC = () => {
                   type="email"
                   value={formData.contact_email}
                   onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                  onKeyDown={(e) => handleKeyDown(e, 'single')}
                   placeholder="Enter contact email"
                   style={{
                     width: '100%',
@@ -364,31 +420,52 @@ const ClientManagement: React.FC = () => {
               </div>
             </div>
             
-            <button
-              type="submit"
-              style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 24px',
-                fontSize: '15px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-              }}
-            >
-              Create Client
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                type="submit"
+                disabled={nameExists}
+                style={{
+                  background: nameExists 
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: nameExists ? 'not-allowed' : 'pointer',
+                  boxShadow: nameExists 
+                    ? 'none' 
+                    : '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.2s ease',
+                  opacity: nameExists ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (!nameExists) {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!nameExists) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                  }
+                }}
+              >
+                Create Client
+              </button>
+              {nameExists && (
+                <span style={{
+                  color: '#ef4444',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}>
+                  A client with this name already exists.
+                </span>
+              )}
+            </div>
           </form>
         </div>
       )}
@@ -499,24 +576,6 @@ const ClientManagement: React.FC = () => {
                 }}>
                   Created: {formatDate(client.created_at)}
                 </p>
-                {client.description && (
-                  <p style={{ 
-                    fontSize: '14px',
-                    color: '#374151',
-                    margin: '4px 0'
-                  }}>
-                    {client.description}
-                  </p>
-                )}
-                {client.contact_name && (
-                  <p style={{ 
-                    fontSize: '14px',
-                    color: '#374151',
-                    margin: '4px 0'
-                  }}>
-                    Contact: {client.contact_name}
-                  </p>
-                )}
               </div>
               
               <div style={{ position: 'relative' }}>
@@ -550,10 +609,7 @@ const ClientManagement: React.FC = () => {
                     minWidth: '140px'
                   }}>
                     <button
-                      onClick={() => {
-                        // TODO: Implement edit functionality
-                        setContextMenuOpen(null);
-                      }}
+                      onClick={() => handleEditClient(client)}
                       style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -693,6 +749,13 @@ const ClientManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      <EditClientModal
+        client={clientToEdit}
+        isOpen={editModalOpen}
+        onClose={handleEditModalClose}
+        onSave={handleEditModalSave}
+      />
     </div>
   );
 };

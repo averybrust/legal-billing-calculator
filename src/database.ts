@@ -423,6 +423,13 @@ export class Database {
     );
   }
 
+  async clientNameExists(name: string, excludeId?: number): Promise<boolean> {
+    const clients = this.getFromStorage('clients');
+    return clients.some((c: Client) => 
+      c.name === name && c.id !== excludeId
+    );
+  }
+
   async getClientsSorted(sortBy: 'name' | 'created'): Promise<Client[]> {
     const clients = this.getFromStorage('clients');
     
